@@ -2,11 +2,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRoute from './routes/user.route.js';
+import authRoute from './routes/auth.route.js';
 
 dotenv.config();
 
-
-mongoose.connect(process.env.MONGO) 
+mongoose.connect(process.env.MONGO)
   .then(() => {
     console.log('Connected to MongoDB');
   })
@@ -15,13 +15,20 @@ mongoose.connect(process.env.MONGO)
   });
 
 const app = express();
+app.use(express.json());
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
-
+app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode || 500 ;
+  const message = err.message || 'Internal Server Error';
+  return res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message
+  });
+});
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
 });
